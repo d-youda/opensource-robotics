@@ -11,70 +11,192 @@
 //     Appinventor file : Robot_Controller_II_robotics_2020.aia
 /******************************************************************************************/
 #include <SoftwareSerial.h>
+#include <Ultrasonic.h>
 
-// bluetooth communication
+
+//Ultrasonic sensor
+char trig = 9;
+char echo = 8;
+int distance;
+
+Ultrasonic ultrasonic(trig,echo);//ultrasonic sensor object
+//bluetooth communication
+
 int blueRx = 4;
 int blueTx = 5;
 unsigned char commandReadyFlag = 0;
 unsigned char command, power;
-SoftwareSerial mySerial(blueRx,blueTx); // 소프트웨어 시리얼통신 포트 생성
+SoftwareSerial mySerial(blueRx,blueTx);//소프트웨어 시리얼통신 포트 생성
 
-// sensor
+
+
 #define BLACK 0
 #define WHITE 1
-// 회전 방향  
-#define CW  1   // clockwise
-#define CCW 0   // counter-clockwise
+//회전방향
+#define CW 1
+#define CCW 0
 
-// 왼쪽, 오른쪽 바퀴  
+//바퀴
 #define MOTOR_LEFT 0
 #define MOTOR_RIGHT 1
 
-// motor settings
-// 아두이노 PIN 설정
-const byte PWMA = 3;      // PWM control (speed) for motor A
-const byte PWMB = 11;     // PWM control (speed) for motor B
-const byte DIRA = 12;     // Direction control for motor A
-const byte DIRB = 13;     // Direction control for motor B
+//moter settings
+//아두이노 핀 설정
 
-int sensor0, sensor1; // sensor reading 0 ~ 1023
-int sensorLeft, sensorRight;  // BLACK(0), WHITE(1)
+const byte PWMA = 3;
+const byte PWMB = 11;
+const byte DIRA = 12;
+const byte DIRB = 13;
 
+int sensor0, sensor1;// sensor reading0-1023
+int  sensorLeft, sensorRight; //BLACK(0), WHITE(1)
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   mySerial.begin(9600);
-  setupArdumoto();      // Set all pins as outputs
+   setupArdumoto();
+
 }
 
 void loop() {
-
-   // Bluetooth communication
+  
+  
+  
+ 
+  ultra();//초음파센서
+  int cutDistance = 10;//장애물과의 거리
+  //Blutooth communicate
   communication();
-    
-  if (command == 1)
+
+  if(command == 1)//어플 작동
   {
-  // read sensor
-  readSensors();
+    if(distance > cutDistance)//장애물 없을 떄
+    {
+      //read Sensor
+      readSensors();
+  
+      //color Finder
+      sensorRight = colorFinder(sensor0);
+      sensorLeft = colorFinder(sensor1);
 
-  // color finder
-  sensorRight = colorFinder(sensor0);
-  sensorLeft  = colorFinder(sensor1);
+       delay(1000);
 
-  // 로봇제어
-  robotControl(sensorLeft,sensorRight); 
+      robotControl(sensorLeft,sensorRight);
+    }
+    /*
+    else if(distance<cutDistance)
+    {
+      robotStop();
+      delay(1000);
+
+      //장애물 피하기
+      robotBackward(95,95);//일단 안전거리 유지 위한 후진
+      delay(50);
+      
+      int rnd = random(0,1);//오른쪽 왼쪽 랜덤으로 고르기
+      if(rnd == 0)
+      {
+        robotRight(95,95);
+        delay(50);
+
+        //검은 선 찾기
+        //read Sensor
+        readSensors();
+  
+        //color Finder
+        sensorRight = colorFinder(sensor0);
+        sensorLeft = colorFinder(sensor1);
+      }
+      else
+      {
+        robotLeft(95,95);
+        delay(50);
+
+        //검은 선 찾기
+        //read Sensor
+        readSensors();
+  
+        //color Finder
+        sensorRight = colorFinder(sensor0);
+        sensorLeft = colorFinder(sensor1); 
+      }
+
+    */
+     
+      
+    }
+    
+    
+  
   }
   else
   robotStop();
-
+  
   
 
+  
+}
+//ULTRASONIC
 
- 
-
+void ultra()
+{
+  //Ultrasonic sensor
+  distance = ultrasonic.read();
+  
+  Serial.print("distance(CM):");
+  Serial.println(distance); // distance in cm
+  delay(500);
+  
+  
+}
+//Read Ssensor measurements
+void readSensors()
+{
+  sensor0 = analogRead(A0); //sensorRight
+  sensor1 = analogRead(A1); //sensorLeft
+  
+  sensorLeft = sensor0;
+  sensorRight = sensor1;
+  
+  Serial.print("sensor R:");
+  Serial.println(sensorRight);
+  Serial.print("sensorL:");
+  Serial.println(sensorLeft);
+  delay(500);
 }
 
+//color finder
+char colorFinder(int sensorValue)
+{
+  char color;
+  const int THRESHOLD = 650;
+  if(sensorValue >THRESHOLD)
+  color = WHITE;
+  else
+  color = BLACK;
+
+  return color;
+}
+
+void robotControl(int sensorLeft, int sensorRight)
+{
+  if(sensorLeft == BLACK && sensorRight == BLACK )
+  robotFoward(100,100);
+  else if(sensorLeft == BLACK && sensorRight == WHITE)
+  {
+    robotLeft(100,100);
+    delay(30);
+  }
+  else if(sensorLeft == WHITE && sensorRight == BLACK)
+  {
+    robotRight(100,100);
+    delay(30);
+  }
+  else
+  robotStop();
+  
+}
  // setupArdumoto initialize all pins
 void setupArdumoto()
 {
@@ -105,112 +227,69 @@ void driveArdumoto(byte motor, byte dir, byte spd)
   }  
 }
 
-void robotForward(int powerLeft, int powerRight)
+void robotFoward(int powerLeft, int powerRight)
 {
   driveArdumoto(MOTOR_RIGHT,CW,powerRight);
-  driveArdumoto(MOTOR_LEFT,CCW,powerRight);
-  
+  driveArdumoto(MOTOR_LEFT,CCW,powerLeft);
 }
 
 void robotBackward(int powerLeft, int powerRight)
 {
   driveArdumoto(MOTOR_RIGHT,CCW,powerRight);
-  driveArdumoto(MOTOR_LEFT,CW,powerRight);
-  
+  driveArdumoto(MOTOR_LEFT,CW,powerLeft);
 }
 
 void robotRight(int powerLeft, int powerRight)
 {
   driveArdumoto(MOTOR_RIGHT,CCW,powerRight);
-  driveArdumoto(MOTOR_LEFT,CCW,powerRight);
+  driveArdumoto(MOTOR_LEFT,CCW,powerLeft);
 }
 
 void robotLeft(int powerLeft, int powerRight)
 {
   driveArdumoto(MOTOR_RIGHT,CW,powerRight);
-  driveArdumoto(MOTOR_LEFT,CW,powerRight);
-}
+  driveArdumoto(MOTOR_LEFT,CW,powerLeft);
+} 
 
 void robotStop()
 {
   stopArdumoto(MOTOR_LEFT);
   stopArdumoto(MOTOR_RIGHT);
 }
+
  // stopArdumoto makes a motor stop
 void stopArdumoto(byte motor)
 {
   driveArdumoto(motor, 0, 0);
 }
 
+//Bluetooth communication
 
-// Read sensor measurements
-void readSensors(){
-  sensor0 = 1023 - analogRead(A0);  // sensor Right
-  sensor1 = 1023 - analogRead(A1);  // sensor Left
-  /*sensorRight = sensor0;
-    sensorLeft = sensor1;
-    Serial.print("sensor R:");
-    Serial.println(sensorRight);
-    Serial.print("sensor L:");
-   Serial.println(sensorLeft); */
-}
-
-// color finder
-char colorFinder(int sensorValue) {
-   char color;
-   const int THRESHOLD = 800;
-  if(sensorValue > THRESHOLD)
-    color = WHITE;
-   else
-     color = BLACK;
-   return color;
-}
-
-
-////////////////////////////////////////////////////////////////
-// 로봇제어 함수
-/////////////////////////////////////////////////////////////////
-
-void robotControl(int sensorLeft, int sensorRight){
-  if (sensorLeft == BLACK && sensorRight == BLACK){
-      robotForward(100,100);
-   
-  }
-            
-   else if (sensorLeft == BLACK && sensorRight == WHITE) {
-              robotLeft(100,100);
-              delay(30);
-    }
-   else if (sensorLeft == WHITE && sensorRight == BLACK) {
-              robotRight(100,100);
-              delay(30);
-    }
-   else
-              robotStop();
- }
-
-
-// Bluetooth communication
-
-void communication(){
-  if (mySerial.available() >= 4){
-    Serial.println("data arrived ");
+void communication()
+{
+  if(mySerial.available() >= 4)
+  {
+   // Serial.println("data arrived:");
     unsigned char buffer[4];
 
-    // read data from buffer and save to array
-    for (char i=0; i<4; i++){
+    //read data from buffer and save to array
+    for(char i=0; i<4; i++)
+    {
       buffer[i] = mySerial.read();
     }
 
-    // verify data
-    if ( buffer[0]== 255 && buffer[3] == 100) {
-         command = buffer[1];
-         power = buffer[2];   
+    //verify data
 
-         Serial.print("command:");
-         Serial.println(command);
-          Serial.print("power:");
-         Serial.println(power);
-    }    
+    if(buffer[0]== 255 && buffer[3]== 100)
+    {
+      command = buffer[1];
+      power = buffer[2];
+      /*
+       Serial.print("command:");
+       Serial.println(command);
+       Serial.print("power:");
+       Serial.println(power);
+       */
+    }
   }
 }
