@@ -55,7 +55,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   mySerial.begin(9600);
-   setupArdumoto();
+  setupArdumoto();
 
 }
 
@@ -64,14 +64,14 @@ void loop() {
   
   
  
-  ultra();//초음파센서
-  int cutDistance = 10;//장애물과의 거리
+   ultra();//초음파센서
+  int cutDistance = 5;//장애물과의 거리
   //Blutooth communicate
   communication();
 
   if(command == 1)//어플 작동
   {
-    if(distance > cutDistance)//장애물 없을 떄
+    if(distance > cutDistance)//장애물 없을 때
     {
       //read Sensor
       readSensors();
@@ -79,62 +79,29 @@ void loop() {
       //color Finder
       sensorRight = colorFinder(sensor0);
       sensorLeft = colorFinder(sensor1);
-
-       delay(1000);
-
-      robotControl(sensorLeft,sensorRight);
-    }
-    /*
-    else if(distance<cutDistance)
-    {
-      robotStop();
       delay(1000);
 
+     robotControl_Black(sensorLeft,sensorRight); 
+     robotControl_White(sensorLeft,sensorRight);
+     robotControl_Black(sensorLeft,sensorRight); 
+     robotControl_White(sensorLeft,sensorRight);
+     robotControl_Black(sensorLeft,sensorRight);
+      
+    }//장애물 없을 때 end
+    
+    else if(distance<cutDistance)//장애물 있을 때
+    {
+      robotStop();
+      delay(500);
+      
       //장애물 피하기
-      robotBackward(95,95);//일단 안전거리 유지 위한 후진
-      delay(50);
+      avoidObstacle();
       
-      int rnd = random(0,1);//오른쪽 왼쪽 랜덤으로 고르기
-      if(rnd == 0)
-      {
-        robotRight(95,95);
-        delay(50);
-
-        //검은 선 찾기
-        //read Sensor
-        readSensors();
-  
-        //color Finder
-        sensorRight = colorFinder(sensor0);
-        sensorLeft = colorFinder(sensor1);
-      }
-      else
-      {
-        robotLeft(95,95);
-        delay(50);
-
-        //검은 선 찾기
-        //read Sensor
-        readSensors();
-  
-        //color Finder
-        sensorRight = colorFinder(sensor0);
-        sensorLeft = colorFinder(sensor1); 
-      }
-
-    */
-     
-      
-    }
-    
-    
-  
-  }
+  }//장애물 있을 때 end
   else
   robotStop();
   
-  
-
+  }//어플작동end
   
 }
 //ULTRASONIC
@@ -179,23 +146,94 @@ char colorFinder(int sensorValue)
   return color;
 }
 
-void robotControl(int sensorLeft, int sensorRight)
+
+void robotControl_Black(int sensorLeft, int sensorRight)
+
 {
-  if(sensorLeft == BLACK && sensorRight == BLACK )
-  robotFoward(100,100);
-  else if(sensorLeft == BLACK && sensorRight == WHITE)
-  {
-    robotLeft(100,100);
-    delay(30);
-  }
-  else if(sensorLeft == WHITE && sensorRight == BLACK)
-  {
-    robotRight(100,100);
-    delay(30);
-  }
-  else
-  robotStop();
   
+  if(sensorLeft == WHITE && sensorRight == WHITE )
+
+  robotFoward(100,100);
+
+  else if(sensorLeft == WHITE && sensorRight == BLACK)
+
+  {
+
+    robotLeft(100,100);
+
+    delay(30);
+
+  }
+
+  else if(sensorLeft == BLACK && sensorRight == WHITE)
+
+  {
+
+    robotRight(100,100);
+
+    delay(30);
+
+  }
+
+  else
+
+  robotStop();
+
+  
+
+}
+
+void robotControl_White(int sensorLeft, int sensorRight)
+
+{
+
+  if(sensorLeft == BLACK && sensorRight == BLACK )
+
+  robotFoward(100,100);
+
+  else if(sensorLeft == BLACK && sensorRight == WHITE)
+
+  {
+
+    robotLeft(100,100);
+
+    delay(30);
+
+  }
+
+  else if(sensorLeft == WHITE && sensorRight == BLACK)
+
+  {
+
+    robotRight(100,100);
+
+    delay(30);
+
+  }
+
+  else
+
+  robotStop();
+
+  
+
+}
+
+//aviod 
+
+void avoidObstacle()
+{
+      robotRight(95,95);
+      delay(50);
+      robotFoward(95,95);
+      delay(50);
+      robotLeft(95,95);
+      delay(50);
+      robotFoward(95,95);
+      delay(50);
+      robotLeft(95,95);
+      delay(50);
+      robotControl_Black(sensorLeft,sensorRight);
 }
  // setupArdumoto initialize all pins
 void setupArdumoto()
