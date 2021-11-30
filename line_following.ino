@@ -1,15 +1,9 @@
 #include <SoftwareSerial.h>
-
-
-
+#include <Ultrasonic.h>
 
 
 //bluetooth communication
-
-
-
 int blueRx = 4;
-
 int blueTx = 5;
 
 unsigned char commandReadyFlag = 0;
@@ -18,20 +12,11 @@ unsigned char command, power;
 
 SoftwareSerial mySerial(blueRx,blueTx);//소프트웨어 시리얼통신 포트 생성
 
-
-
-
-
-
-
 #define BLACK 0
-
 #define WHITE 1
 
 //회전방향
-
 #define CW 1
-
 #define CCW 0
 
 
@@ -39,7 +24,6 @@ SoftwareSerial mySerial(blueRx,blueTx);//소프트웨어 시리얼통신 포트 
 //바퀴
 
 #define MOTOR_LEFT 0
-
 #define MOTOR_RIGHT 1
 
 
@@ -74,7 +58,7 @@ void setup() {
 
   setupArdumoto();
 
-  mySerial.begin(9600);
+ mySerial.begin(9600);
 
 
 
@@ -84,49 +68,29 @@ void setup() {
 
 void loop() {
 
-// readSensors();
+ //readSensors();
 
   //Blutooth communicate
 
   communication();
-
-
-
   if(command == 1)
-
   {
-
   //read Sensor
-
   readSensors();
 
-  
-
   //color Finder
-
-  sensorRight = colorFinder(sensor0);
-
-  sensorLeft = colorFinder(sensor1);
-
-
-
-
-
-  delay(1000);
-
-
-
+  
+  sensorRight = colorFinder(sensor1);
+  sensorLeft = colorFinder(sensor0);
+  
+  //delay(1000);
   robotControl(sensorLeft,sensorRight);
-
   }
 
   else
-
   robotStop();
 
 
-
- 
 
 }
 
@@ -137,33 +101,26 @@ void loop() {
 void readSensors()
 
 {
-  double avg;
 
-  sensor0 = 1023 - analogRead(A0); //sensorRight
+  sensor0 = 1023 - analogRead(A1); //sensorLeft
 
-  sensor1 = 1023 - analogRead(1); //sensorLeft
+  sensor1 = 1023 - analogRead(A0); //sensorRight
 
   
 
   sensorLeft = sensor0;
 
   sensorRight = sensor1;
-/*
-  avg = (sensor0+sensor1)/2;
 
   Serial.print("sensor R:");
 
-  Serial.print(sensorRight);
+  Serial.println(sensorRight);
 
-  Serial.print(" sensorL:");
+  Serial.print("sensorL:");
 
   Serial.println(sensorLeft);
+  delay(300);
 
-  Serial.print(" average:");
-  Serial.println(avg);
-  
-  delay(500);
- */
 }
 
 
@@ -175,19 +132,14 @@ char colorFinder(int sensorValue)
 {
 
   char color;
-
-  const int THRESHOLD = 680;
+  const int THRESHOLD = 700;
 
   if(sensorValue >THRESHOLD)
-
-  color = WHITE;
+     color = WHITE;
 
   else
-
-  color = BLACK;
-
-
-
+     color = BLACK;
+  
   return color;
 
 }
@@ -199,31 +151,27 @@ void robotControl(int sensorLeft, int sensorRight)
 {
 
   if(sensorLeft == BLACK && sensorRight == BLACK )
-
-  robotFoward(100,100);
+  {
+      robotFoward(100,100);
+  }
 
   else if(sensorLeft == BLACK && sensorRight == WHITE)
 
   {
-
-    robotLeft(100,100);
-
-    delay(30);
+    robotLeft(80,80);
+    delay(20);
 
   }
 
   else if(sensorLeft == WHITE && sensorRight == BLACK)
 
   {
-
-    robotRight(100,100);
-
-    delay(30);
+    robotRight(65,65);
+    delay(10);
 
   }
 
   else
-
   robotStop();
 
   
@@ -371,11 +319,8 @@ void communication()
 {
 
   if(mySerial.available() >= 4)
-
   {
-
     Serial.println("data arrived:");
-
     unsigned char buffer[4];
 
 
