@@ -40,6 +40,8 @@ const byte DIRB = 13;     // Direction control for motor B
 int sensor0, sensor1; // sensor reading 0 ~ 1023
 int sensorLeft, sensorRight;  // BLACK(0), WHITE(1)
 
+int cnt = 0;//끊어진 길 몇 번 이동하나?
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -179,8 +181,16 @@ void robotControl(int sensorLeft, int sensorRight){
                robotLeft(90,90);
               delay(30);
     }
-   else
-              robotStop();
+   else{
+    if(cnt==0){
+      robotForward(90,100);
+      delay(1200);
+      cnt++;
+    }
+    else
+      robotStop();
+   }
+            
  }
 
 
