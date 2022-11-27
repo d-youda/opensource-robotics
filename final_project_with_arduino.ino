@@ -11,6 +11,13 @@
 //     Appinventor file : Robot_Controller_II_robotics_2020.aia
 /******************************************************************************************/
 #include <SoftwareSerial.h>
+#include <Ultrasonic.h>
+
+//초음파센서 코드
+char trig = 9;
+char echo = 8;
+int distance;
+Ultrasonic ultrasonic(trig,echo);//초음파센서 생성자 호출
 
 // bluetooth communication
 int blueRx = 4;
@@ -40,7 +47,7 @@ const byte DIRB = 13;     // Direction control for motor B
 int sensor0, sensor1; // sensor reading 0 ~ 1023
 int sensorLeft, sensorRight;  // BLACK(0), WHITE(1)
 
-
+int cutDistance = 10; //장애물 보고 멈출 위치 지정
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -54,7 +61,15 @@ void loop() {
   communication();
     
   if (command == 1){
-    follow_line();
+    //장애물 없을 때 라인 잘 따라가기
+    if (distance>cutDistance){
+      follow_line();
+    }
+
+    //장애물 있을 때
+    else{
+      robotStop();
+    }
   }
   else
   robotStop();
