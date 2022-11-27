@@ -68,7 +68,7 @@ void loop() {
 
     //장애물 있을 때
     else{
-      robotStop();
+      avoid_obstacle();
     }
   }
   else
@@ -230,4 +230,18 @@ void follow_line(){
 
   // 로봇제어
   robotControl(sensorLeft,sensorRight); 
+}
+
+void avoid_obstacle(){
+  robotRight(90,90);
+  delay(300);
+  robotForward(100,80);
+  delay(1000);
+        
+  robotLeft(90,90);
+  delay(700);
+  robotForward(100,80);
+  delay(400);
+
+  follow_line();
 }
