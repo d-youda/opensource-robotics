@@ -11,13 +11,6 @@
 //     Appinventor file : Robot_Controller_II_robotics_2020.aia
 /******************************************************************************************/
 #include <SoftwareSerial.h>
-#include <Ultrasonic.h>
-
-//초음파센서 코드
-char trig = 9;
-char echo = 8;
-int distance;
-Ultrasonic ultrasonic(trig,echo);//초음파센서 생성자 호출
 
 // bluetooth communication
 int blueRx = 4;
@@ -47,8 +40,8 @@ const byte DIRB = 13;     // Direction control for motor B
 int sensor0, sensor1; // sensor reading 0 ~ 1023
 int sensorLeft, sensorRight;  // BLACK(0), WHITE(1)
 
-int cutDistance = 10; //장애물 보고 멈출 위치 지정
 int cnt = 0;//끊어진 길 몇 번 이동하나?
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -59,19 +52,20 @@ void setup() {
 
 void loop() {
 
-  // Bluetooth 연결
+   // Bluetooth communication
   communication();
     
-  if (command == 1){
-    //장애물 없을 때 라인 잘 따라가기
-    if (distance>cutDistance){
-      follow_line();
-    }
+  if (command == 1)
+  {
+  // read sensor
+  readSensors();
 
-    //장애물 있을 때
-    else{
-      avoid_obstacle();
-    }
+  // color finder
+  sensorRight = colorFinder(sensor0);
+  sensorLeft  = colorFinder(sensor1);
+
+  // 로봇제어
+  robotControl(sensorLeft,sensorRight); 
   }
   else
   robotStop();
@@ -155,18 +149,12 @@ void stopArdumoto(byte motor)
 void readSensors(){
   sensor0 = 1023 - analogRead(A0);  // sensor Right
   sensor1 = 1023 - analogRead(A1);  // sensor Left
-  sensorRight = sensor0;
-  sensorLeft = sensor1;
-  Serial.print("sensor R:");
-  Serial.println(sensorRight);
-  Serial.print("sensor L:");
-  Serial.println(sensorLeft); 
 }
 
 // color finder
 char colorFinder(int sensorValue) {
    char color;
-   const int THRESHOLD = 980;
+   const int THRESHOLD = 800;
   if(sensorValue > THRESHOLD)
     color = WHITE;
    else
@@ -181,29 +169,28 @@ char colorFinder(int sensorValue) {
 
 void robotControl(int sensorLeft, int sensorRight){
   if (sensorLeft == BLACK && sensorRight == BLACK){
-      robotForward(100,100);
+      robotForward(90,100);
    
   }
             
    else if (sensorLeft == BLACK && sensorRight == WHITE) {
-              robotLeft(100,100);
+              robotRight(90,90);
               delay(30);
     }
    else if (sensorLeft == WHITE && sensorRight == BLACK) {
-              robotRight(100,100);
+               robotLeft(90,90);
               delay(30);
     }
    else{
-     if(cnt>=1){
-      robotStop();
-      delay(100);
-      
+    if(cnt==0){
       robotForward(90,100);
       delay(1200);
       cnt++;
     }
+    else
+      robotStop();
    }
-              robotStop();
+            
  }
 
 
@@ -230,29 +217,4 @@ void communication(){
          Serial.println(power);
     }    
   }
-}
-void follow_line(){
-  // 센서값 읽기
-  readSensors();
-
-  // color finder
-  sensorRight = colorFinder(sensor0);
-  sensorLeft  = colorFinder(sensor1);
-
-  // 로봇제어
-  robotControl(sensorLeft,sensorRight); 
-}
-
-void avoid_obstacle(){
-  robotRight(90,90);
-  delay(300);
-  robotForward(100,80);
-  delay(1000);
-        
-  robotLeft(90,90);
-  delay(700);
-  robotForward(100,80);
-  delay(400);
-
-  follow_line();
 }
