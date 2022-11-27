@@ -48,6 +48,8 @@ int sensor0, sensor1; // sensor reading 0 ~ 1023
 int sensorLeft, sensorRight;  // BLACK(0), WHITE(1)
 
 int cutDistance = 10; //장애물 보고 멈출 위치 지정
+int cnt = 0;//끊어진 길 몇 번 이동하나?
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -191,7 +193,16 @@ void robotControl(int sensorLeft, int sensorRight){
               robotRight(100,100);
               delay(30);
     }
-   else
+   else{
+     if(cnt>=1){
+      robotStop();
+      delay(100);
+      
+      robotForward(90,100);
+      delay(1200);
+      cnt++;
+    }
+   }
               robotStop();
  }
 
