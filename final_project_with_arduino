@@ -50,23 +50,14 @@ void setup() {
 
 void loop() {
 
-   // Bluetooth communication
+  // Bluetooth 연결
   communication();
     
-//  if (command == 1)
-//  {
-  // read sensor
-  readSensors();
-//
-//  // color finder
-//  sensorRight = colorFinder(sensor0);
-//  sensorLeft  = colorFinder(sensor1);
-//
-//  // 로봇제어
-//  robotControl(sensorLeft,sensorRight); 
-//  }
-//  else
-//  robotStop();
+  if (command == 1){
+    follow_line();
+  }
+  else
+  robotStop();
 
   
 
@@ -213,4 +204,15 @@ void communication(){
          Serial.println(power);
     }    
   }
+}
+void follow_line(){
+  // 센서값 읽기
+  readSensors();
+
+  // color finder
+  sensorRight = colorFinder(sensor0);
+  sensorLeft  = colorFinder(sensor1);
+
+  // 로봇제어
+  robotControl(sensorLeft,sensorRight); 
 }
