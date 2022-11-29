@@ -54,7 +54,7 @@ void setup() {
 void loop() {
   readSensors();
   ultra();
-  int cutDistance = 20; //장애물 보고 멈출 위치 지정
+  int cutDistance = 10; //장애물 보고 멈출 위치 지정
   // Bluetooth 연결
   communication();
 
@@ -62,12 +62,13 @@ void loop() {
     follow_line();
 
     //장애물 있을 때 멈춤
-    obstacle_stop(cutDistance);
-  }
-    
+    if (distance<cutDistance)
+      obstacle_avoid(cutDistance);
+ } 
   else
     robotStop();
 }
+
 
  // setupArdumoto initialize all pins
 void setupArdumoto()
@@ -212,8 +213,27 @@ void follow_line(){
 //  delay(500);
  }
 
-void obstacle_stop(int cutDistance){
-   if (distance<cutDistance){
-      robotStop();
+void obstacle_avoid(int cutDistance){
+
+   //학교 트랙에 맞게 값 조정하기
+      robotRight(90,90);
+      delay(400);
+      robotForward(100,80);
+      delay(1400);
+        
+      robotLeft(90,90);
+      delay(500);
+      robotForward(100,80);
+      delay(1400);
+      
+//      //로봇이 라인 찾을 때까지 직진
+//      while(true){
+//        if(sensorLeft == WHITE && sensorRight == WHITE){
+//            robotForward(100,80);
+//            delay(10);
+//      }
+//      //라인 찾으면 lineFollowing으로 복귀함
+//      else
+//        break;
+//      }
     }
-}
