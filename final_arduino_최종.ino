@@ -43,6 +43,7 @@ const byte DIRA = 12;     // Direction control for motor A
 const byte DIRB = 13;     // Direction control for motor B
 int sensor0, sensor1; // sensor reading 0 ~ 1023
 int sensorLeft, sensorRight;  // BLACK(0), WHITE(1)
+int cnt=0;//끊어진 길을 몇 번 이동하나
 
 void setup() {
   // put your setup code here, to run once:
@@ -61,9 +62,12 @@ void loop() {
   if (command == 1){
     follow_line();
 
-    //장애물 있을 때 멈춤
+    //장애물 있을 때 장애물 피함
     if (distance<cutDistance)
       obstacle_avoid(cutDistance);
+    
+    //잘린 라인에서도 주행할수 있도록 함
+//    cuttingLineFollow(cnt);
  } 
   else
     robotStop();
@@ -169,9 +173,22 @@ void robotControl(int sensorLeft, int sensorRight){
               robotRight(100,100);
               delay(30);
     }
-   else
-              robotStop();
- }
+   else{
+    if(cnt<2){
+         //잠시 멈춤
+        robotForward(0,0);
+        delay(100);
+      
+        robotForward(100,100);
+        delay(950);
+        cnt++;//실행되었으므로 cnt+1하기
+    }
+    else
+      robotStop();
+   }
+              //robotStop();
+   }
+
 // Bluetooth communication
 void communication(){
   if (mySerial.available() >= 4){
@@ -237,3 +254,24 @@ void obstacle_avoid(int cutDistance){
 //        break;
 //      }
     }
+    
+//void cuttingLineFollow(int cnt){
+//  if(sensorLeft == WHITE && sensorRight == WHITE){
+//  //잘린 부분이 두 개이므로 두 번만 화이트에서 앞으로 가도록 함
+//  while(true){
+//    //두 번 이상 시행했을 경우, 루프 탈출하기
+//    if(cnt>1){
+//        follow_line();
+//        break;
+//    }
+//     //잠시 멈춤
+//        robotForward(0,0);
+//        delay(100);
+//      
+//        robotForward(90,95);
+//        delay(950);
+//        cnt++;//실행되었으므로 cnt+1하기
+//  }
+//  }
+//  //두 화이트를 지나면 loop로 복귀해 line_follow 함수를 따라가도록 함
+//}
